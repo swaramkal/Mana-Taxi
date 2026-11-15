@@ -1,0 +1,11 @@
+{
+  "name": "mana-taxi",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/fare.test.mjs",
+    "serve": "firebase emulators:start --only hosting,firestore,auth",
+    "deploy": "firebase deploy --only hosting,firestore:rules"
+  }
+}

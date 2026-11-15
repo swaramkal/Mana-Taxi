@@ -1,0 +1,39 @@
+<!doctype html><html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0f1115"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="css/style.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><title>Login · MANA TAXI</title></head><body>
+<header class="nav"><a class="logo" href="index.html"><span class="logo-mark">M</span><b>MANA TAXI</b></a><nav id="links" aria-label="Main"><a href="index.html#services">Services</a><a href="index.html#how">How it works</a><a href="index.html#why">Why us</a><a href="index.html#safety">Safety</a><a href="index.html#faq">FAQ</a><a href="login.html?tab=driver">Drive with us</a></nav><div class="navr"><button id="themeBtn" class="icon" aria-label="Toggle light/dark theme">◐</button><span id="navAuth"></span><button id="menuBtn" class="icon only-m" aria-label="Menu">☰</button></div></header>
+<main class="wrap" style="max-width:560px;padding-top:24px;padding-bottom:50px">
+<div class="card fade"><h2 id="ttl">Welcome back</h2>
+<div class="tabs" role="tablist"><button class="tab" data-t="login">Login</button><button class="tab" data-t="register">Customer sign-up</button><button class="tab" data-t="driver">Driver sign-up</button></div>
+
+<form id="fLogin" class="pane" novalidate><p class="muted" id="adminHint" hidden>Admin sign-in uses the same form. Admin accounts are created by the project owner only.</p>
+ <label for="lE">Email</label><input id="lE" type="email" autocomplete="email" required>
+ <label for="lP">Password</label><input id="lP" type="password" autocomplete="current-password" required>
+ <p><button class="btn gold block" id="lB">Login</button></p><p class="center"><a href="#" id="forgot" class="muted">Forgot password?</a></p></form>
+
+<form id="fReg" class="pane" novalidate>
+ <label for="rN">Full name</label><input id="rN" autocomplete="name" required>
+ <label for="rE">Email</label><input id="rE" type="email" autocomplete="email" required>
+ <label for="rM">Mobile number (10 digits)</label><input id="rM" inputmode="numeric" maxlength="10" autocomplete="tel-national" required>
+ <label for="rP">Password (min 8 characters)</label><input id="rP" type="password" autocomplete="new-password" required>
+ <label for="rC">Confirm password</label><input id="rC" type="password" autocomplete="new-password" required>
+ <label style="display:flex;gap:8px;align-items:center"><input id="rT" type="checkbox" style="width:auto"> I accept the Terms and Privacy Policy</label>
+ <p><button class="btn gold block" id="rB">Create customer account</button></p></form>
+
+<form id="fDrv" class="pane" novalidate>
+ <label for="dN">Full name</label><input id="dN" autocomplete="name" required>
+ <label for="dE">Email</label><input id="dE" type="email" autocomplete="email" required>
+ <label for="dM">Mobile number (10 digits)</label><input id="dM" inputmode="numeric" maxlength="10" required>
+ <label for="dP">Password (min 8 characters)</label><input id="dP" type="password" autocomplete="new-password" required>
+ <label for="dC">Confirm password</label><input id="dC" type="password" autocomplete="new-password" required>
+ <h3 style="margin-top:18px">Driving licence</h3>
+ <label for="dL">Licence number</label><input id="dL" required><label for="dLE">Licence expiry date</label><input id="dLE" type="date" required>
+ <h3 style="margin-top:18px">Vehicle</h3>
+ <label for="dT">Vehicle type</label><select id="dT"><option value="mini">Mini</option><option value="sedan">Sedan</option><option value="suv">SUV</option></select>
+ <label for="dV">Make &amp; model</label><input id="dV" placeholder="e.g. Maruti Dzire" required>
+ <label for="dR">Registration number</label><input id="dR" placeholder="AP31AB1234" required>
+ <label for="dRC">RC (registration certificate) number</label><input id="dRC" required>
+ <label for="dI">Insurance policy number</label><input id="dI" required>
+ <p class="note">Document numbers are reviewed by an admin. Your account stays <b>PENDING</b> until approved; you cannot go online before that.</p>
+ <label style="display:flex;gap:8px;align-items:center"><input id="dT2" type="checkbox" style="width:auto"> I accept the Terms and confirm my details are true</label>
+ <p><button class="btn gold block" id="dB">Submit driver application</button></p></form>
+</div></main>
+<script type="module" src="js/auth.js"></script></body></html>

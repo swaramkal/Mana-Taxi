@@ -1,0 +1,14 @@
+<!doctype html><html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0f1115"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="css/style.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><title>Driver · MANA TAXI</title></head><body>
+<header class="nav"><a class="logo" href="index.html"><span class="logo-mark">M</span><b>MANA TAXI</b> <span class="badge">Driver</span></a><div class="navr"><button id="themeBtn" class="icon" aria-label="Toggle theme">◐</button><span id="navAuth"></span></div></header>
+<main class="wrap" style="padding-bottom:50px"><h2 style="margin-top:20px" id="hello">Driver dashboard</h2>
+<div class="tabs"><button class="tab on" data-p="pHome">Rides</button><button class="tab" data-p="pEarn">Earnings</button><button class="tab" data-p="pHist">Trip history</button><button class="tab" data-p="pProf">Profile &amp; calculator</button></div>
+<section id="pHome" class="pane on">
+ <div class="card" id="statusCard"></div>
+ <div id="activeBox" style="margin-top:12px"></div>
+ <h3 style="margin-top:18px">Nearby requests</h3><div id="offers" class="grid g2"></div>
+</section>
+<section id="pEarn" class="pane"><div id="earnBox"></div></section>
+<section id="pHist" class="pane card"><div class="tw" id="histBox"></div></section>
+<section id="pProf" class="pane"><div class="grid g2"><div class="card" id="profBox"></div>
+ <div class="card"><h3>Estimated profit calculator</h3><label for="cF">Customer fare (₹)</label><input id="cF" type="number" min="0" value="200"><label for="cK">Distance (km)</label><input id="cK" type="number" min="0" value="10"><label for="cO">Other expenses (₹)</label><input id="cO" type="number" min="0" value="0"><div id="cOut" style="margin-top:12px"></div></div></div></section>
+</main><script type="module" src="js/driver.js"></script></body></html>

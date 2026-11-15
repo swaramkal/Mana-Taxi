@@ -1,0 +1,531 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="theme-color" content="#0f1115">
+  <meta name="description" content="MANA TAXI SERVICE - Book Mini, Sedan and SUV taxis in Visakhapatnam. Convenient city rides, airport transfers and outstation trips.">
+  <meta name="keywords" content="Mana Taxi, Vizag Taxi, Visakhapatnam Taxi, Cab Booking, Airport Taxi">
+  <meta name="author" content="MANA TAXI SERVICE">
+
+  <meta property="og:title" content="MANA TAXI SERVICE | Your Ride, Your Way">
+  <meta property="og:description" content="Book your next ride in Visakhapatnam with MANA TAXI.">
+  <meta property="og:type" content="website">
+
+  <title>MANA TAXI SERVICE | Your Ride, Your Way</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <script defer
+          src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+</head>
+
+<body>
+
+  <!-- NAVIGATION -->
+
+  <header class="nav">
+
+    <a class="logo" href="index.html" aria-label="Mana Taxi home">
+      <span class="logo-mark">M</span>
+      <b>MANA TAXI</b>
+    </a>
+
+    <nav id="links" aria-label="Main navigation">
+
+      <a href="#services">Services</a>
+      <a href="#how">How it works</a>
+      <a href="#why">Why us</a>
+      <a href="#safety">Safety</a>
+      <a href="#faq">FAQ</a>
+
+      <a href="login.html?tab=driver">
+        Drive with us
+      </a>
+
+    </nav>
+
+    <div class="navr">
+
+      <button
+        id="themeBtn"
+        class="icon"
+        type="button"
+        aria-label="Toggle theme">
+        ◐
+      </button>
+
+      <span id="navAuth"></span>
+
+      <button
+        id="menuBtn"
+        class="icon only-m"
+        type="button"
+        aria-label="Open navigation"
+        aria-expanded="false">
+        ☰
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <main>
+
+    <!-- HERO SECTION -->
+
+    <section class="hero">
+
+      <div class="wrap">
+
+        <div class="hero-t">
+
+          <span class="pill">
+            VISAKHAPATNAM · VIZAG
+          </span>
+
+          <h1>
+            Your Ride,
+            <span class="gold">Your Way.</span>
+          </h1>
+
+          <p class="muted">
+            Your journey starts here.
+
+            Book comfortable Mini, Sedan and SUV taxis
+            for city rides, airport transfers and
+            outstation journeys.
+          </p>
+
+          <div class="row wrapf">
+
+            <a href="#book" class="btn gold">
+              Book a Taxi
+            </a>
+
+            <a href="login.html?tab=driver" class="btn">
+              Register as a Driver
+            </a>
+
+          </div>
+
+        </div>
+
+
+        <!-- BOOKING SECTION -->
+
+        <div class="card" id="book">
+
+          <h2>
+            Book Your Ride
+          </h2>
+
+          <p class="muted">
+            Choose your pickup and destination
+            to get an estimated fare.
+          </p>
+
+          <div id="bookingRoot">
+
+            <div class="empty">
+              <span class="spin"></span>
+              Loading booking system...
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- SERVICES -->
+
+    <section class="sec" id="services">
+
+      <div class="wrap">
+
+        <h2 class="center">
+          Our Services
+        </h2>
+
+        <p class="muted center">
+          Travel comfortably with MANA TAXI.
+        </p>
+
+        <div class="grid g3 keep2">
+
+          <div class="card fade">
+            <h3>🏙️ City Rides</h3>
+            <p class="muted">
+              Convenient point-to-point journeys
+              throughout Visakhapatnam.
+            </p>
+          </div>
+
+          <div class="card fade">
+            <h3>✈️ Airport Transfers</h3>
+            <p class="muted">
+              Plan your airport pickup and
+              drop-off journeys.
+            </p>
+          </div>
+
+          <div class="card fade">
+            <h3>🛣️ Outstation Trips</h3>
+            <p class="muted">
+              Travel beyond Vizag with
+              comfortable taxi options.
+            </p>
+          </div>
+
+          <div class="card fade">
+            <h3>⏱️ Hourly Rentals</h3>
+            <p class="muted">
+              Book a vehicle for your
+              hourly travel requirements.
+            </p>
+          </div>
+
+          <div class="card fade">
+            <h3>📅 Full-Day Rentals</h3>
+            <p class="muted">
+              Convenient vehicle rentals
+              for longer journeys.
+            </p>
+          </div>
+
+          <div class="card fade">
+            <h3>🚘 Multiple Vehicles</h3>
+            <p class="muted">
+              Choose between Mini, Sedan
+              and SUV categories.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- HOW IT WORKS -->
+
+    <section class="sec" id="how"
+             style="background:var(--bg2)">
+
+      <div class="wrap">
+
+        <h2 class="center">
+          How MANA TAXI Works
+        </h2>
+
+        <div class="grid g4 keep2">
+
+          <div class="card">
+            <b class="gold">01</b>
+            <h3>Choose Your Route</h3>
+            <p class="muted">
+              Enter your pickup and
+              destination locations.
+            </p>
+          </div>
+
+          <div class="card">
+            <b class="gold">02</b>
+            <h3>Select Your Vehicle</h3>
+            <p class="muted">
+              Compare estimated fares
+              and select your vehicle.
+            </p>
+          </div>
+
+          <div class="card">
+            <b class="gold">03</b>
+            <h3>Get a Driver</h3>
+            <p class="muted">
+              Your ride request can be
+              accepted by an eligible driver.
+            </p>
+          </div>
+
+          <div class="card">
+            <b class="gold">04</b>
+            <h3>Enjoy Your Journey</h3>
+            <p class="muted">
+              Follow your ride status
+              through your dashboard.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- WHY CHOOSE US -->
+
+    <section class="sec" id="why">
+
+      <div class="wrap">
+
+        <h2 class="center">
+          Why Choose MANA TAXI?
+        </h2>
+
+        <div class="grid g3">
+
+          <div class="card">
+            <h3>Free Booking</h3>
+            <p class="muted">
+              No booking or confirmation fee
+              for customers.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Driver Verification</h3>
+            <p class="muted">
+              Drivers require approval
+              before receiving rides.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Fare Estimates</h3>
+            <p class="muted">
+              View estimated fares based
+              on your selected route.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- SAFETY -->
+
+    <section class="sec" id="safety"
+             style="background:var(--bg2)">
+
+      <div class="wrap">
+
+        <h2 class="center">
+          Safety & Support
+        </h2>
+
+        <div class="grid g2">
+
+          <div class="card">
+
+            <h3>🛡️ Your Safety Matters</h3>
+
+            <p class="muted">
+              Check your assigned driver's
+              details and vehicle information
+              before starting your journey.
+            </p>
+
+            <p class="muted">
+              For emergencies in India,
+              call 112.
+            </p>
+
+          </div>
+
+          <div class="card">
+
+            <h3>🎧 Customer Support</h3>
+
+            <p class="muted">
+              Use your customer dashboard
+              to access available support
+              and submit service requests.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- FAQ -->
+
+    <section class="sec" id="faq">
+
+      <div class="wrap" style="max-width:780px">
+
+        <h2 class="center">
+          Frequently Asked Questions
+        </h2>
+
+        <details>
+          <summary>
+            Is booking free?
+          </summary>
+          <p class="muted">
+            Yes. Customers can submit ride
+            bookings without a booking fee
+            or confirmation payment.
+          </p>
+        </details>
+
+        <details>
+          <summary>
+            Which vehicles are available?
+          </summary>
+          <p class="muted">
+            MANA TAXI supports Mini,
+            Sedan and SUV categories.
+          </p>
+        </details>
+
+        <details>
+          <summary>
+            How can I register as a driver?
+          </summary>
+          <p class="muted">
+            Select Drive with us or
+            Register as a Driver.
+            Your registration requires
+            approval before receiving rides.
+          </p>
+        </details>
+
+        <details>
+          <summary>
+            Can I cancel a ride?
+          </summary>
+          <p class="muted">
+            Ride cancellation is available
+            according to the booking status
+            and platform cancellation rules.
+          </p>
+        </details>
+
+        <details>
+          <summary>
+            How are fares calculated?
+          </summary>
+          <p class="muted">
+            The platform displays estimated
+            fares based on configured rates
+            and route distance. Actual fares
+            depend on the final fare policy.
+          </p>
+        </details>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- FOOTER -->
+
+  <footer>
+
+    <div class="wrap grid g3">
+
+      <div>
+
+        <b>MANA TAXI SERVICE</b>
+
+        <p>
+          Your Ride, Your Way.
+        </p>
+
+        <p>
+          Visakhapatnam,
+          Andhra Pradesh, India.
+        </p>
+
+      </div>
+
+      <div>
+
+        <b>Explore</b>
+
+        <p>
+          <a href="#services">Services</a>
+        </p>
+
+        <p>
+          <a href="#safety">Safety</a>
+        </p>
+
+        <p>
+          <a href="#faq">FAQ</a>
+        </p>
+
+      </div>
+
+      <div>
+
+        <b>Join MANA TAXI</b>
+
+        <p>
+          <a href="login.html">
+            Customer Login
+          </a>
+        </p>
+
+        <p>
+          <a href="login.html?tab=driver">
+            Driver Registration
+          </a>
+        </p>
+
+      </div>
+
+    </div>
+
+    <div class="wrap center"
+         style="margin-top:25px">
+
+      <p class="muted">
+        © <span id="year"></span>
+        MANA TAXI SERVICE.
+        All rights reserved.
+      </p>
+
+    </div>
+
+  </footer>
+
+
+  <!-- APPLICATION SCRIPT -->
+
+  <script type="module" src="js/home.js"></script>
+
+  <script>
+    document.getElementById("year").textContent =
+      new Date().getFullYear();
+  </script>
+
+</body>
+</html>

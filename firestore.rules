@@ -1,0 +1,663 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    // ==================================================
+    // COMMON HELPERS
+    // ==================================================
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function P(path) {
+      return /databases/$(db)/documents/$(path);
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(P('admins/' + uid()));
+    }
+
+    function isApprovedDriver() {
+      return signedIn()
+        && exists(P('drivers/' + uid()))
+        && get(P('drivers/' + uid())).data.approval == 'APPROVED';
+    }
+
+    function changed(keys) {
+      return request.resource.data
+        .diff(resource.data)
+        .affectedKeys()
+        .hasOnly(keys);
+    }
+
+    function validStep(a, b) {
+      return a == b
+        || (a == 'DRIVER_ASSIGNED' && b == 'DRIVER_ARRIVED')
+        || (a == 'DRIVER_ARRIVED' && b == 'TRIP_STARTED')
+        || (a == 'TRIP_STARTED' && b == 'TRIP_COMPLETED');
+    }
+
+    function terminalStatus(status) {
+      return status in [
+        'CANCELLED',
+        'NO_DRIVER_AVAILABLE',
+        'TRIP_COMPLETED'
+      ];
+    }
+
+    function validLocation(location) {
+      return location is map
+        && location.keys().hasAll(['address', 'lat', 'lng'])
+        && location.address is string
+        && location.lat is number
+        && location.lng is number
+        && location.lat >= -90
+        && location.lat <= 90
+        && location.lng >= -180
+        && location.lng <= 180;
+    }
+
+    // ==================================================
+    // CUSTOMER BOOKING REFERENCES
+    // ==================================================
+
+    function validCustomerBookingLink() {
+      return request.resource.data.activeBookingId
+          == resource.data.activeBookingId
+
+        // Customer links a newly created booking.
+        || (
+          request.resource.data.activeBookingId is string
+          && existsAfter(
+            P('bookings/' + request.resource.data.activeBookingId)
+          )
+          && getAfter(
+            P('bookings/' + request.resource.data.activeBookingId)
+          ).data.customerId == uid()
+          && getAfter(
+            P('bookings/' + request.resource.data.activeBookingId)
+          ).data.status == 'SEARCHING_DRIVER'
+        )
+
+        // Customer releases a terminal booking.
+        || (
+          request.resource.data.activeBookingId == null
+          && resource.data.activeBookingId is string
+          && existsAfter(
+            P('bookings/' + resource.data.activeBookingId)
+          )
+          && getAfter(
+            P('bookings/' + resource.data.activeBookingId)
+          ).data.customerId == uid()
+          && terminalStatus(
+            getAfter(
+              P('bookings/' + resource.data.activeBookingId)
+            ).data.status
+          )
+        );
+    }
+
+    // Admin can clear a customer's lock while closing a booking.
+    function validAdminCustomerBookingLink(id) {
+      return request.resource.data.activeBookingId
+          == resource.data.activeBookingId
+
+        || (
+          request.resource.data.activeBookingId == null
+          && resource.data.activeBookingId is string
+          && existsAfter(
+            P('bookings/' + resource.data.activeBookingId)
+          )
+          && getAfter(
+            P('bookings/' + resource.data.activeBookingId)
+          ).data.customerId == id
+          && terminalStatus(
+            getAfter(
+              P('bookings/' + resource.data.activeBookingId)
+            ).data.status
+          )
+        );
+    }
+
+    // ==================================================
+    // DRIVER BOOKING REFERENCES
+    // ==================================================
+
+    function validDriverBookingLink() {
+      return request.resource.data.activeBookingId
+          == resource.data.activeBookingId
+
+        // Driver accepts a booking.
+        || (
+          request.resource.data.activeBookingId is string
+          && existsAfter(
+            P('bookings/' + request.resource.data.activeBookingId)
+          )
+          && getAfter(
+            P('bookings/' + request.resource.data.activeBookingId)
+          ).data.driverId == uid()
+          && getAfter(
+            P('bookings/' + request.resource.data.activeBookingId)
+          ).data.status == 'DRIVER_ASSIGNED'
+        )
+
+        // Driver releases a terminal booking.
+        || (
+          request.resource.data.activeBookingId == null
+          && resource.data.activeBookingId is string
+          && existsAfter(
+            P('bookings/' + resource.data.activeBookingId)
+          )
+          && getAfter(
+            P('bookings/' + resource.data.activeBookingId)
+          ).data.driverId == uid()
+          && terminalStatus(
+            getAfter(
+              P('bookings/' + resource.data.activeBookingId)
+            ).data.status
+          )
+        );
+    }
+
+    // Admin can assign or release a driver's booking lock.
+    function validAdminDriverBookingLink(id) {
+      return request.resource.data.activeBookingId
+          == resource.data.activeBookingId
+
+        || (
+          request.resource.data.activeBookingId is string
+          && existsAfter(
+            P('bookings/' + request.resource.data.activeBookingId)
+          )
+          && getAfter(
+            P('bookings/' + request.resource.data.activeBookingId)
+          ).data.driverId == id
+          && getAfter(
+            P('bookings/' + request.resource.data.activeBookingId)
+          ).data.status == 'DRIVER_ASSIGNED'
+        )
+
+        || (
+          request.resource.data.activeBookingId == null
+          && resource.data.activeBookingId is string
+          && existsAfter(
+            P('bookings/' + resource.data.activeBookingId)
+          )
+          && getAfter(
+            P('bookings/' + resource.data.activeBookingId)
+          ).data.driverId == id
+          && terminalStatus(
+            getAfter(
+              P('bookings/' + resource.data.activeBookingId)
+            ).data.status
+          )
+        );
+    }
+
+    // ==================================================
+    // ADMINS
+    // ==================================================
+
+    match /admins/{id} {
+      allow read: if signedIn() && uid() == id;
+      allow write: if false;
+    }
+
+    // ==================================================
+    // USERS
+    // ==================================================
+
+    match /users/{id} {
+
+      allow read: if signedIn()
+        && (uid() == id || isAdmin());
+
+      allow create: if signedIn()
+        && uid() == id
+        && request.resource.data.keys().hasAll([
+          'name',
+          'email',
+          'phone',
+          'role',
+          'status',
+          'createdAt',
+          'activeBookingId'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'email',
+          'phone',
+          'role',
+          'status',
+          'createdAt',
+          'activeBookingId'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.phone is string
+        && request.resource.data.status == 'active'
+        && request.resource.data.activeBookingId == null
+        && (
+          request.resource.data.role == 'customer'
+          || (
+            request.resource.data.role == 'driver'
+            && existsAfter(P('drivers/' + id))
+            && getAfter(P('drivers/' + id)).data.approval == 'PENDING'
+            && getAfter(P('drivers/' + id)).data.email
+                == request.resource.data.email
+          )
+        );
+
+      allow update: if signedIn() && (
+
+        // Own profile and booking reference.
+        (
+          uid() == id
+          && changed([
+            'name',
+            'phone',
+            'activeBookingId'
+          ])
+          && validCustomerBookingLink()
+          && request.resource.data.name is string
+          && request.resource.data.phone is string
+        )
+
+        // Admin account status.
+        || (
+          isAdmin()
+          && changed(['status'])
+          && request.resource.data.status in [
+            'active',
+            'suspended'
+          ]
+        )
+
+        // Admin releases customer lock during cancellation
+        // or no-driver handling.
+        || (
+          isAdmin()
+          && changed(['activeBookingId'])
+          && validAdminCustomerBookingLink(id)
+        )
+      );
+
+      allow delete: if false;
+    }
+
+    // ==================================================
+    // DRIVERS
+    // ==================================================
+
+    match /drivers/{id} {
+
+      allow read: if signedIn()
+        && (uid() == id || isAdmin());
+
+      allow create: if signedIn()
+        && uid() == id
+        && existsAfter(P('users/' + id))
+        && getAfter(P('users/' + id)).data.role == 'driver'
+        && getAfter(P('users/' + id)).data.status == 'active'
+        && getAfter(P('users/' + id)).data.email
+            == request.resource.data.email
+        && request.resource.data.keys().hasAll([
+          'name',
+          'email',
+          'phone',
+          'licenseNo',
+          'licenseExpiry',
+          'vehicleType',
+          'vehicleModel',
+          'vehicleNo',
+          'rcNo',
+          'insuranceNo',
+          'approval',
+          'online',
+          'activeBookingId',
+          'lat',
+          'lng',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'email',
+          'phone',
+          'licenseNo',
+          'licenseExpiry',
+          'vehicleType',
+          'vehicleModel',
+          'vehicleNo',
+          'rcNo',
+          'insuranceNo',
+          'approval',
+          'online',
+          'activeBookingId',
+          'lat',
+          'lng',
+          'createdAt'
+        ])
+        && request.resource.data.approval == 'PENDING'
+        && request.resource.data.online == false
+        && request.resource.data.activeBookingId == null
+        && request.resource.data.vehicleType in [
+          'mini',
+          'sedan',
+          'suv'
+        ];
+
+      allow update: if signedIn() && (
+
+        // Driver's own profile and operational fields.
+        (
+          uid() == id
+          && changed([
+            'name',
+            'phone',
+            'online',
+            'lat',
+            'lng',
+            'updatedAt',
+            'activeBookingId'
+          ])
+          && (
+            request.resource.data.online == false
+            || resource.data.approval == 'APPROVED'
+          )
+          && validDriverBookingLink()
+        )
+
+        // Admin approval, suspension and assignment management.
+        || (
+          isAdmin()
+          && changed([
+            'approval',
+            'online',
+            'activeBookingId',
+            'reviewNote',
+            'reviewedAt'
+          ])
+          && request.resource.data.approval in [
+            'PENDING',
+            'APPROVED',
+            'REJECTED',
+            'SUSPENDED'
+          ]
+          && validAdminDriverBookingLink(id)
+        )
+      );
+
+      allow delete: if false;
+    }
+
+    // ==================================================
+    // BOOKINGS
+    // ==================================================
+
+    match /bookings/{bid} {
+
+      allow read: if signedIn() && (
+        resource.data.customerId == uid()
+        || resource.data.driverId == uid()
+        || isAdmin()
+        || (
+          isApprovedDriver()
+          && resource.data.status == 'SEARCHING_DRIVER'
+        )
+      );
+
+      // Customer creates a free booking.
+      // No payment or confirmation fee is required.
+      allow create: if signedIn()
+        && request.resource.data.customerId == uid()
+        && request.resource.data.status == 'SEARCHING_DRIVER'
+        && request.resource.data.driverId == null
+        && request.resource.data.vehicle in [
+          'mini',
+          'sedan',
+          'suv'
+        ]
+        && request.resource.data.service in [
+          'city',
+          'airport',
+          'outstation',
+          'hourly',
+          'fullday'
+        ]
+        && request.resource.data.pickup is map
+        && validLocation(request.resource.data.pickup)
+        && (
+          request.resource.data.service in ['hourly', 'fullday']
+          || (
+            request.resource.data.drop is map
+            && validLocation(request.resource.data.drop)
+          )
+        )
+        && request.resource.data.fare is number
+        && request.resource.data.fare > 0
+        && request.resource.data.fare < 100000
+        && request.resource.data.distanceKm is number
+        && request.resource.data.distanceKm >= 0
+        && exists(P('users/' + uid()))
+        && get(P('users/' + uid())).data.role == 'customer'
+        && get(P('users/' + uid())).data.status == 'active'
+        && get(P('users/' + uid())).data.activeBookingId == null
+        && getAfter(P('users/' + uid())).data.activeBookingId == bid;
+
+      allow update: if signedIn() && (
+
+        // Customer cancellation.
+        (
+          resource.data.customerId == uid()
+          && changed([
+            'status',
+            'cancelledAt',
+            'cancelReason',
+            'noDriverAt'
+          ])
+          && (
+            request.resource.data.status == 'CANCELLED'
+            && resource.data.status in [
+              'SEARCHING_DRIVER',
+              'DRIVER_ASSIGNED'
+            ]
+            ||
+            request.resource.data.status == 'NO_DRIVER_AVAILABLE'
+            && resource.data.status == 'SEARCHING_DRIVER'
+          )
+        )
+
+        // Approved driver accepts an available booking.
+        || (
+          resource.data.status == 'SEARCHING_DRIVER'
+          && request.resource.data.status == 'DRIVER_ASSIGNED'
+          && request.resource.data.driverId == uid()
+          && isApprovedDriver()
+          && changed([
+            'status',
+            'driverId',
+            'driverInfo',
+            'assignedAt'
+          ])
+          && get(P('drivers/' + uid())).data.online == true
+          && get(P('drivers/' + uid())).data.activeBookingId == null
+          && get(P('drivers/' + uid())).data.vehicleType
+              == resource.data.vehicle
+          && getAfter(P('drivers/' + uid())).data.activeBookingId == bid
+          && (
+            !('expiresAt' in resource.data)
+            || resource.data.expiresAt > request.time
+          )
+        )
+
+        // Assigned driver advances the trip.
+        || (
+          resource.data.driverId == uid()
+          && isApprovedDriver()
+          && changed([
+            'status',
+            'driverLoc',
+            'arrivedAt',
+            'startedAt',
+            'completedAt',
+            'waitMinutes',
+            'waitingCharge',
+            'finalFare',
+            'commission',
+            'commissionPct',
+            'payout',
+            'fuelExpense',
+            'maintExpense',
+            'otherExpense',
+            'profit'
+          ])
+          && validStep(
+            resource.data.status,
+            request.resource.data.status
+          )
+        )
+
+        // Admin manually assigns an eligible driver.
+        || (
+          isAdmin()
+          && resource.data.status == 'SEARCHING_DRIVER'
+          && request.resource.data.status == 'DRIVER_ASSIGNED'
+          && request.resource.data.driverId is string
+          && changed([
+            'status',
+            'driverId',
+            'driverInfo',
+            'assignedAt'
+          ])
+          && exists(
+            P('drivers/' + request.resource.data.driverId)
+          )
+          && get(
+            P('drivers/' + request.resource.data.driverId)
+          ).data.approval == 'APPROVED'
+          && get(
+            P('drivers/' + request.resource.data.driverId)
+          ).data.online == true
+          && get(
+            P('drivers/' + request.resource.data.driverId)
+          ).data.vehicleType == resource.data.vehicle
+          && getAfter(
+            P('drivers/' + request.resource.data.driverId)
+          ).data.activeBookingId == bid
+        )
+
+        // Admin closes a booking.
+        || (
+          isAdmin()
+          && changed([
+            'status',
+            'cancelledAt',
+            'cancelReason',
+            'noDriverAt',
+            'adminNote'
+          ])
+          && (
+            (
+              request.resource.data.status == 'CANCELLED'
+              && resource.data.status in [
+                'SEARCHING_DRIVER',
+                'DRIVER_ASSIGNED',
+                'DRIVER_ARRIVED',
+                'TRIP_STARTED'
+              ]
+            )
+            ||
+            (
+              request.resource.data.status == 'NO_DRIVER_AVAILABLE'
+              && resource.data.status == 'SEARCHING_DRIVER'
+            )
+            ||
+            (
+              request.resource.data.status == resource.data.status
+              && request.resource.data.adminNote is string
+            )
+          )
+        )
+      );
+
+      allow delete: if false;
+
+      // ------------------------------------------------
+      // PRIVATE CUSTOMER CONTACT
+      // ------------------------------------------------
+
+      match /contact/{contactId} {
+
+        allow create: if signedIn()
+          && contactId == 'info'
+          && getAfter(P('bookings/' + bid)).data.customerId == uid();
+
+        allow read: if signedIn() && (
+          get(P('bookings/' + bid)).data.customerId == uid()
+          || get(P('bookings/' + bid)).data.driverId == uid()
+          || isAdmin()
+        );
+
+        allow update, delete: if false;
+      }
+    }
+
+    // ==================================================
+    // SETTINGS
+    // ==================================================
+
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ==================================================
+    // CUSTOMER SUPPORT
+    // ==================================================
+
+    match /support/{id} {
+
+      allow create: if signedIn()
+        && request.resource.data.userId == uid()
+        && request.resource.data.status == 'OPEN';
+
+      allow read: if signedIn()
+        && (
+          resource.data.userId == uid()
+          || isAdmin()
+        );
+
+      allow update: if isAdmin()
+        && changed([
+          'reply',
+          'status',
+          'repliedAt'
+        ])
+        && request.resource.data.status == 'CLOSED';
+
+      allow delete: if false;
+    }
+
+    // ==================================================
+    // ADMIN AUDIT LOG
+    // ==================================================
+
+    match /audit/{id} {
+
+      allow create: if isAdmin()
+        && request.resource.data.adminId == uid();
+
+      allow read: if isAdmin();
+
+      allow update, delete: if false;
+    }
+  }
+}
